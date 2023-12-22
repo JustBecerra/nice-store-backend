@@ -3,6 +3,7 @@ package main
 import (
     "net/http"
     "github.com/gin-gonic/gin"
+    "strconv"
 )
 
 type Rating struct {
@@ -23,7 +24,8 @@ type Product struct {
 func main() {
     router := gin.Default()
     router.GET("/products", getProducts)
-
+    // router.POST("/products", postProducts)
+    router.GET("/products/:id", getProductById)
     router.Run("localhost:8080")
 }
 
@@ -36,4 +38,35 @@ var products = []Product{
 // getAlbums responds with the list of all albums as JSON.
 func getProducts(c *gin.Context) {
     c.IndentedJSON(http.StatusOK, products)
+}
+
+func getProductById(c *gin.Context) {
+    id := c.Param("id")
+    idInt, err := strconv.Atoi(id)
+
+    // Loop over the list of albums, looking for
+    // an album whose ID value matches the parameter.
+    if(err != nil) {
+        for _, a := range products {
+            if a.ID == idInt {
+                c.IndentedJSON(http.StatusOK, a)
+                return
+            }
+        }
+        c.IndentedJSON(http.StatusNotFound, gin.H{"message": "album not found"})
+    }
+    
+}
+
+func postProducts(c *gin.Context) {
+    var newProduct Product
+
+    // Call BindJSON to bind the received JSON to
+    if err := c.BindJSON(&newProduct); err != nil {
+        return
+    }
+
+    // Add the new product to the slice.
+    products = append(products, newProduct)
+    c.IndentedJSON(http.StatusCreated, newProduct)
 }
