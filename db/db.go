@@ -1,15 +1,12 @@
 package db
- 
+
 import (
-   "errors"
-   "fmt"
-   "log"
-   "os"
- 
-   "github.com/google/uuid"
-   "github.com/jinzhu/gorm"
-   _ "github.com/jinzhu/gorm/dialects/postgres"
-   "github.com/joho/godotenv"
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/jinzhu/gorm"
+	"github.com/joho/godotenv"
 )
  
 var db *gorm.DB
