@@ -1,6 +1,9 @@
 package router
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -30,14 +33,40 @@ var products = []Product{
 
 // getAlbums responds with the list of all albums as JSON.
 func getProducts(c *gin.Context) {
-    c.IndentedJSON(http.StatusOK, products)
+    response, err := http.Get("https://fakestoreapi.com/products")
+
+    if err != nil {
+        fmt.Print(err.Error())
+    }
+    defer response.Body.Close()
+
+    // read response
+    responseData, err := io.ReadAll(response.Body)
+    if err != nil {
+        fmt.Print(err)
+    }
+
+    //unmarshal to transform into JSON
+    var responseObject []Product
+    json.Unmarshal(responseData, &responseObject)
+    err = json.Unmarshal(responseData, &responseObject)
+    if err != nil {
+        fmt.Print(err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to unmarshal response"})
+        return
+    }
+
+    // send unmarshal response
+    c.IndentedJSON(http.StatusOK, responseObject)
 }
+
+    
 
 func getProductById(c *gin.Context) {
     id := c.Param("id")
 	// convert id of type int to string
     idInt, err := strconv.Atoi(id)
-
+    // (`https://fakestoreapi.com/products/${id}`);
     // Loop over the list of products, looking for
     // an products whose ID value matches the parameter.
     if(err != nil) {
