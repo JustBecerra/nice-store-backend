@@ -14,6 +14,7 @@ var db *gorm.DB
 var err error
  
 type Rating struct {
+	ID    int     `json:"id" gorm:"primaryKey"`
     Rate float64 `json:"rate"`
     Count int `json:"count"`
 }
@@ -25,6 +26,7 @@ type Product struct {
 	Description string `json:"description"`
 	Category string `json:"category"`
     Image string `json:"image"`
+	RatingID int `json:"rating_id" gorm:"foreignKey:Rating"`
     Rating Rating `json:"rating"`
 }
  
