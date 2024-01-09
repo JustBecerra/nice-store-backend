@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -110,6 +111,7 @@ func postProducts(c *gin.Context) {
 
 func InitRouter() *gin.Engine {
     router := gin.Default()
+    router.Use(cors.Default())
     router.GET("/products", getProducts)
     // router.POST("/products", postProducts)
     router.GET("/products/:id", getProductById)
