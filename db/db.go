@@ -13,8 +13,8 @@ import (
 var db *gorm.DB
 var err error
  
+// ... (your model definitions)
 type Rating struct {
-	ID    int     `json:"id" gorm:"primaryKey"`
     Rate float64 `json:"rate"`
     Count int `json:"count"`
 }
@@ -26,12 +26,19 @@ type Product struct {
 	Description string `json:"description"`
 	Category string `json:"category"`
     Image string `json:"image"`
-	RatingID int `json:"rating_id" gorm:"foreignKey:Rating"`
     Rating Rating `json:"rating"`
 }
- 
+
+type User struct {
+    ID int `json:"id"`
+    Name string `json:"name"`
+    Email string `json:"email"`
+    Password string `json:"password"`
+    // Image image.Image `json:"image"`
+}
+
 func InitPostgresDB() {
-   // Load environment variables from the .env file
+	// Load environment variables from the .env file
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatal("Error loading .env file", err)
@@ -56,11 +63,16 @@ func InitPostgresDB() {
 	)
 
 	// Register the pq driver with gorm
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// AutoMigrate your models
-	db.AutoMigrate(&Product{})
+	db.AutoMigrate(&Product{}, &User{})
+}
+
+// GetDB returns the Gorm database instance
+func GetDB() *gorm.DB {
+	return db
 }

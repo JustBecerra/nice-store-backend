@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"store/nice-store-backend/db"
 	"strconv"
 
 	"github.com/gin-contrib/cors"
@@ -26,10 +27,12 @@ type Product struct {
     Rating Rating `json:"rating"`
 }
 
-var products = []Product{
-    {ID: 1, Title: "Fjallraven - Foldsack No. 1 Backpack, Fits 15 Laptops", Price: 109.95, Description: "Your perfect pack for everyday use and walks in the forest. Stash your laptop (up to 15 inches) in the padded sleeve, your everyday", Category: "men's clothing", Image: "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg", Rating: Rating{Rate: 3.9, Count: 120}},
-    {ID: 2, Title: "Mens Casual Premium Slim Fit T-Shirts", Price: 22.3, Description: "Slim-fitting style, contrast raglan long sleeve, three-button henley placket, light weight & soft fabric for breathable and comfortable wearing. And Solid stitched shirts with round neck made for durability and a great fit for casual fashion wear and diehard baseball fans. The Henley style round neckline includes a three-button placket.", Category: "men's clothing", Image: "https://fakestoreapi.com/img/71-3HjGNDUL._AC_SY879._SX._UX._SY._UY_.jpg", Rating: Rating{Rate: 4.1, Count: 259}},
-    {ID: 3, Title: "Mens Cotton Jacket", Price: 55.99, Description: "great outerwear jackets for Spring/Autumn/Winter, suitable for many occasions, such as working, hiking, camping, mountain/rock climbing, cycling, traveling or other outdoors. Good gift choice for you or your family member. A warm-hearted love to Father, husband or son in this Thanksgiving or Christmas Day.", Category: "men's clothing", Image: "https://fakestoreapi.com/img/71li-ujtlUL._AC_UX679_.jpg", Rating: Rating{Rate: 4.7, Count: 500}},
+type User struct {
+    ID int `json:"id"`
+    Name string `json:"name"`
+    Email string `json:"email"`
+    Password string `json:"password"`
+    // Image image.Image `json:"image"`
 }
 
 // getAlbums responds with the list of all albums as JSON.
@@ -96,24 +99,44 @@ func getProductById(c *gin.Context) {
     
 }
 
-func postProducts(c *gin.Context) {
-    var newProduct Product
+func CreateUser(user *User) (*User, error) {
+    database := db.GetDB()
+    // user.ID = uuid.New().String()
 
-    // Call BindJSON to bind the received JSON to
-    if err := c.BindJSON(&newProduct); err != nil {
+    res := database.Create(user)
+    if res.Error != nil {
+        return nil, res.Error
+    }
+    return user, nil
+ }
+
+ func postUser(ctx *gin.Context) {
+    var user User
+    err := ctx.Bind(&user)
+    if err != nil {
+        ctx.JSON(http.StatusBadRequest, gin.H{
+            "error": err.Error(),
+        })
         return
     }
-
-    // Add the new product to the slice.
-    products = append(products, newProduct)
-    c.IndentedJSON(http.StatusCreated, newProduct)
-}
+    res, err := CreateUser(&user)
+    if err != nil {
+        ctx.JSON(http.StatusBadRequest, gin.H{
+            "error": err.Error(),
+        })
+        return
+    }
+    ctx.JSON(http.StatusCreated, gin.H{
+        "movie": res,
+    })
+ }
 
 func InitRouter() *gin.Engine {
     router := gin.Default()
+    db.GetDB()
     router.Use(cors.Default())
     router.GET("/products", getProducts)
-    // router.POST("/products", postProducts)
     router.GET("/products/:id", getProductById)
+    router.POST("/user", postUser)
     return router
  }

@@ -6,8 +6,9 @@ import (
 )
 
 func main() {
-    router := router.InitRouter()
 	db.InitPostgresDB()
+    router := router.InitRouter()
+	
 	// Run the server
 	port := ":8080" // You can change the port as needed
 	router.Run(port)
