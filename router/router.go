@@ -110,24 +110,53 @@ func CreateUser(user *User) (*User, error) {
     return user, nil
  }
 
- func postUser(ctx *gin.Context) {
+ func CheckUser(userEmail string) (*User, error) {
+    database := db.GetDB()
     var user User
-    err := ctx.Bind(&user)
+    result := database.Where("email = ?", userEmail).First(&user)
+    if result.Error != nil {
+        return nil, result.Error
+    } 
+    return &user, nil
+}
+
+ func postUser(ctx *gin.Context) {
+    userEmail := ctx.Param("email")
+    existingUser, err := CheckUser(userEmail)
+
     if err != nil {
-        ctx.JSON(http.StatusBadRequest, gin.H{
-            "error": err.Error(),
+        // User does not exist, create a new user with additional parameters
+        // For example, assuming you have other parameters in the request body
+        var newUser User
+        if err := ctx.BindJSON(&newUser); err != nil {
+            ctx.IndentedJSON(http.StatusBadRequest, gin.H{
+                "error": "Invalid request body",
+            })
+            return
+        }
+
+        // Set the email since it is used as the unique identifier
+        newUser.Email = userEmail
+
+        // Create the new user
+        createdUser, err := CreateUser(&newUser)
+
+        if err != nil {
+            ctx.IndentedJSON(http.StatusBadRequest, gin.H{
+                "error": err.Error(),
+            })
+            return
+        }
+
+        ctx.IndentedJSON(http.StatusCreated, gin.H{
+            "user": createdUser,
         })
         return
     }
-    res, err := CreateUser(&user)
-    if err != nil {
-        ctx.JSON(http.StatusBadRequest, gin.H{
-            "error": err.Error(),
-        })
-        return
-    }
-    ctx.JSON(http.StatusCreated, gin.H{
-        "movie": res,
+
+    // User already exists
+    ctx.IndentedJSON(http.StatusOK, gin.H{
+        "message": fmt.Sprintf("Address %s is already registered", existingUser.Email), // need to make sure address pops up in the return message
     })
  }
 
