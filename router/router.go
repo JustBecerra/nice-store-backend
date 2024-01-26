@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
 )
 
 type Rating struct {
@@ -29,9 +30,10 @@ type Product struct {
 
 type User struct {
     ID int `json:"id"`
-    Name string `json:"name"`
+    Fullname string `json:"fullname"`
     Email string `json:"email"`
     Password string `json:"password"`
+    Address string `json:"address"`
     // Image image.Image `json:"image"`
 }
 
@@ -63,8 +65,6 @@ func getProducts(c *gin.Context) {
     // send unmarshal response
     c.IndentedJSON(http.StatusOK, responseObject)
 }
-
-    
 
 func getProductById(c *gin.Context) {
     id := c.Param("id")
@@ -99,66 +99,36 @@ func getProductById(c *gin.Context) {
     
 }
 
-func CreateUser(user *User) (*User, error) {
-    database := db.GetDB()
-    // user.ID = uuid.New().String()
+func updateUser(c *gin.Context) {
+    db := db.GetDB()
+    id := c.Param("id")
+    fullname := c.Param("fullname")
+    email := c.Param("email")
+    address := c.Param("address")
+    password := c.Param("password")
 
-    res := database.Create(user)
-    if res.Error != nil {
-        return nil, res.Error
-    }
-    return user, nil
- }
-
- func CheckUser(userEmail string) (*User, error) {
-    database := db.GetDB()
-    var user User
-    result := database.Where("email = ?", userEmail).First(&user)
-    if result.Error != nil {
-        return nil, result.Error
-    } 
-    return &user, nil
-}
-
- func postUser(ctx *gin.Context) {
-    userEmail := ctx.Param("email")
-    existingUser, err := CheckUser(userEmail)
-
+    var userToUpdate User
+    err := db.First(&userToUpdate, id).Error
     if err != nil {
-        // User does not exist, create a new user with additional parameters
-        // For example, assuming you have other parameters in the request body
-        var newUser User
-        if err := ctx.BindJSON(&newUser); err != nil {
-            ctx.IndentedJSON(http.StatusBadRequest, gin.H{
-                "error": "Invalid request body",
-            })
-            return
-        }
-
-        // Set the email since it is used as the unique identifier
-        newUser.Email = userEmail
-
-        // Create the new user
-        createdUser, err := CreateUser(&newUser)
-
-        if err != nil {
-            ctx.IndentedJSON(http.StatusBadRequest, gin.H{
-                "error": err.Error(),
-            })
-            return
-        }
-
-        ctx.IndentedJSON(http.StatusCreated, gin.H{
-            "user": createdUser,
-        })
+        // Handle the error, you can send an error response or log it
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found"})
         return
     }
 
-    // User already exists
-    ctx.IndentedJSON(http.StatusOK, gin.H{
-        "message": fmt.Sprintf("Address %s is already registered", existingUser.Email), // need to make sure address pops up in the return message
-    })
- }
+    userToUpdate.Fullname = fullname
+    userToUpdate.Email = email
+    userToUpdate.Address = address
+    userToUpdate.Password = password
+
+    err = db.Save(&userToUpdate).Error
+	if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "User could not be updated"})
+		return 
+	}
+
+    // Send a success response if the update was successful
+    c.JSON(http.StatusOK, gin.H{"message": "User updated successfully"})
+}
 
 func InitRouter() *gin.Engine {
     router := gin.Default()
@@ -166,6 +136,6 @@ func InitRouter() *gin.Engine {
     router.Use(cors.Default())
     router.GET("/products", getProducts)
     router.GET("/products/:id", getProductById)
-    router.POST("/user", postUser)
+    router.PUT("/user", updateUser)
     return router
  }

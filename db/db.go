@@ -31,7 +31,7 @@ type Product struct {
 
 type User struct {
     ID int `json:"id"`
-    Name string `json:"name"`
+    Fullname string `json:"fullname"`
     Email string `json:"email"`
     Password string `json:"password"`
     // Image image.Image `json:"image"`
