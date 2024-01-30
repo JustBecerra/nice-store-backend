@@ -101,24 +101,23 @@ func getProductById(c *gin.Context) {
 
 func updateUser(c *gin.Context) {
     db := db.GetDB()
-    id := c.Param("id")
-    fullname := c.Param("fullname")
-    email := c.Param("email")
-    address := c.Param("address")
-    password := c.Param("password")
 
     var userToUpdate User
-    err := db.First(&userToUpdate, id).Error
+    var bodyData User
+    if err := c.ShouldBindJSON(&bodyData); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON data"})
+        return
+    }
+
+    matchID := bodyData.ID
+    fmt.Println(matchID)
+
+    err := db.First(&userToUpdate, matchID).Error
     if err != nil {
         // Handle the error, you can send an error response or log it
         c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found"})
         return
     }
-
-    userToUpdate.Fullname = fullname
-    userToUpdate.Email = email
-    userToUpdate.Address = address
-    userToUpdate.Password = password
 
     err = db.Save(&userToUpdate).Error
 	if err != nil {
