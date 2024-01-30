@@ -119,6 +119,19 @@ func updateUser(c *gin.Context) {
         return
     }
 
+    if bodyData.Fullname != "" {
+		userToUpdate.Fullname = bodyData.Fullname
+	}
+	if bodyData.Email != "" {
+		userToUpdate.Email = bodyData.Email
+	}
+	if bodyData.Password != "" {
+		userToUpdate.Password = bodyData.Password
+	}
+	if bodyData.Address != "" {
+		userToUpdate.Address = bodyData.Address
+	}
+
     err = db.Save(&userToUpdate).Error
 	if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "User could not be updated"})
