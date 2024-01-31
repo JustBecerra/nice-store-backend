@@ -29,15 +29,13 @@ type Product struct {
 }
 
 type User struct {
-    ID int `json:"id"`
+    ID int `gorm:"primaryKey;column:id" json:"id"`
     Fullname string `json:"fullname"`
     Email string `json:"email"`
     Password string `json:"password"`
     Address string `json:"address"`
-    // Image image.Image `json:"image"`
 }
 
-// getAlbums responds with the list of all albums as JSON.
 func getProducts(c *gin.Context) {
     response, err := http.Get("https://fakestoreapi.com/products")
 
@@ -108,11 +106,8 @@ func updateUser(c *gin.Context) {
         c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON data"})
         return
     }
-
-    matchID := bodyData.ID
-    fmt.Println(matchID)
-
-    err := db.First(&userToUpdate, matchID).Error
+    fmt.Print(bodyData.ID)
+    err := db.First(&userToUpdate, bodyData.ID).Error
     if err != nil {
         // Handle the error, you can send an error response or log it
         c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found"})

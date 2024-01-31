@@ -1,7 +1,6 @@
 package db
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -13,7 +12,6 @@ import (
 var db *gorm.DB
 var err error
  
-// ... (your model definitions)
 type Rating struct {
     Rate float64 `json:"rate"`
     Count int `json:"count"`
@@ -30,11 +28,10 @@ type Product struct {
 }
 
 type User struct {
-    ID int `json:"id"`
+    ID int `gorm:"primaryKey;column:id" json:"id"`
     Fullname string `json:"fullname"`
     Email string `json:"email"`
     Password string `json:"password"`
-    // Image image.Image `json:"image"`
 }
 
 func InitPostgresDB() {
@@ -44,22 +41,8 @@ func InitPostgresDB() {
 		log.Fatal("Error loading .env file", err)
 	}
 
-	// Extract database connection details from environment variables
 	var (
-		host     = os.Getenv("DB_HOST")
-		port     = os.Getenv("DB_PORT")
-		dbUser   = os.Getenv("DB_USER")
-		dbName   = os.Getenv("DB_NAME")
-		password = os.Getenv("DB_PASSWORD")
-	)
-
-	// Create a connection string
-	dsn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
-		host,
-		port,
-		dbUser,
-		dbName,
-		password,
+		dsn = os.Getenv("POSTGRES_URL")
 	)
 
 	// Register the pq driver with gorm
