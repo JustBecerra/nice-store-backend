@@ -127,11 +127,11 @@ func updateUser(c *gin.Context) {
 		userToUpdate.Address = bodyData.Address
 	}
 
-    err = db.Save(&userToUpdate).Error
-	if err != nil {
+    err = db.Model(&userToUpdate).Updates(userToUpdate).Error
+    if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "User could not be updated"})
-		return 
-	}
+        return
+    }
 
     // Send a success response if the update was successful
     c.JSON(http.StatusOK, gin.H{"message": "User updated successfully"})
